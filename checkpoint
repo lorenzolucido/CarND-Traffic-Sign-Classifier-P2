@@ -1,0 +1,2 @@
+model_checkpoint_path: "lorenzonet"
+all_model_checkpoint_paths: "lorenzonet"

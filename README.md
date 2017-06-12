@@ -1,54 +1,130 @@
-## Project: Build a Traffic Sign Recognition Program
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+# **Traffic Sign Recognition**
 
-Overview
+_Lorenzo's version_
+
 ---
-In this project, you will use what you've learned about deep neural networks and convolutional neural networks to classify traffic signs. You will train and validate a model so it can classify traffic sign images using the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset). After the model is trained, you will then try out your model on images of German traffic signs that you find on the web.
 
-We have included an Ipython notebook that contains further instructions 
-and starter code. Be sure to download the [Ipython notebook](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb). 
+**Build a Traffic Sign Recognition Project**
 
-We also want you to create a detailed writeup of the project. Check out the [writeup template](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup. The writeup can be either a markdown file or a pdf document.
-
-To meet specifications, the project will require submitting three files: 
-* the Ipython notebook with the code
-* the code exported as an html file
-* a writeup report either as a markdown or pdf file 
-
-Creating a Great Writeup
----
-A great writeup should include the [rubric points](https://review.udacity.com/#!/rubrics/481/view) as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
-
-The Project
----
 The goals / steps of this project are the following:
-* Load the data set
+* Load the data set (see below for links to the project data set)
 * Explore, summarize and visualize the data set
 * Design, train and test a model architecture
 * Use the model to make predictions on new images
 * Analyze the softmax probabilities of the new images
 * Summarize the results with a written report
 
-### Dependencies
-This lab requires:
 
-* [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit)
+[//]: # (Image References)
 
-The lab environment can be created with CarND Term1 Starter Kit. Click [here](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) for the details.
+[image1]: ./classes_repartition.png "Visualization"
+[preprocess]: ./preprocessing.png "preprocessing"
+[internet_images]: ./internet_images.png "Internet Predictions"
+[augmented]: ./augmentation.png "Internet Predictions"
 
-### Dataset and Repository
+## Rubric Points
+Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/481/view) individually and describe how I addressed each point in my implementation.  
 
-1. Download the data set. The classroom has a link to the data set in the "Project Instructions" content. This is a pickled dataset in which we've already resized the images to 32x32. It contains a training, validation and test set.
-2. Clone the project, which contains the Ipython notebook and the writeup template.
-```sh
-git clone https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project
-cd CarND-Traffic-Sign-Classifier-Project
-jupyter notebook Traffic_Sign_Classifier.ipynb
-```
+---
+### Writeup / README
 
-### Requirements for Submission
-Follow the instructions in the `Traffic_Sign_Classifier.ipynb` notebook and write the project report using the writeup template as a guide, `writeup_template.md`. Submit the project code and writeup document.
+Link to the [project code](https://github.com/lorenzolucido/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb)
+
+### Data Set Summary & Exploration
+
+I used the pandas library to calculate summary statistics of the traffic
+signs data set:
+
+* The size of training set is 34799
+* The size of the validation set is 4410
+* The size of test set is 12630
+* The shape of a traffic sign image is 32x32x3
+* The number of unique classes/labels in the data set is 43
+
+Here is an exploratory visualization of the data set. It is a bar chart showing the classes repartition within the training, validation and testing sets.
+I also included a simple visualization of random images from the dataset.
+
+![alt text][image1]
+
+### Design and Test a Model Architecture
+
+I did try a few pre-processing steps: grayscale, HSV, standardization by channels or on the full image. Eventually I decided to go for the RGB standardization by channels as recommended [in the CS231n Data pre-processing chapter](http://cs231n.github.io/neural-networks-2/)
+
+Below is how a normalized image would look:
+![alt text][preprocess]
+
+Additionally, I augmented the dataset by using the pre-built tensorflow functions.
+For each image, during training, I did apply a small variation of brightness, contrast and saturation, as well as a random cropping. See below:
+![alt text][augmented]
+
+My final model (**LorenzoNet**)was very much inspired by the VGG architecture, it consists of the following layers:
+
+| Layer         		|     Description	        					|
+|:---------------------:|:---------------------------------------------:|
+| Input         		| 32x32x3 RGB image   							|
+| Convolution 3x3     	| 1x1 stride, same padding, outputs 32x32x16 	|
+| Max pooling	      	| 2x2 stride,  valid padding, outputs 16x16x16 				|
+| RELU					|												|
+| Convolution 3x3	    | 1x1 stride, same padding, outputs 16x16x32     									|
+| Max pooling	      	| 2x2 stride,  valid padding, outputs 8x8x32 				|
+| RELU					|												|
+|Convolution 3x3	    | 1x1 stride, same padding, outputs 8x8x64      									|
+| Max pooling	      	| 2x2 stride,  valid padding, outputs 4x4x64 				|
+| RELU					|		|
+| Fully connected		| inputs 1024, outputs 120       									|
+| RELU					|												|
+| Dropout					|												|
+| Fully connected		| inputs 120, outputs 84        									|
+| RELU					|												|
+| Dropout					|												|
+| Fully connected		| inputs 84, outputs number of categories        									|
+| Softmax				|    outputs final probabilities     									|
+
+
+
+To train the model, I used a batch size of 128 training samples, 30 Epochs and learning rate of 0.001 with the Adam Optimizer.
+
+My final model results were:
+* training set accuracy of 99.6%
+* validation set accuracy of 97.2%
+* test set accuracy of 95.8%
+
+I initially started with a LeNet-5 architecture (2 convolutional layers and 3 fully connected layers), results were around 85%-90% accuracy on the validation set. Then I started to read about the current state-of-the art in image recognition. Among [Inception](https://arxiv.org/abs/1602.07261), [VGG](http://www.robots.ox.ac.uk/~vgg/research/very_deep/) and [ResNet](https://arxiv.org/abs/1512.03385).
+VGG happened to be a good candidate, as the other 2 seem to be relevant for more complex images, eventually the traffic sign dataset does not look that complicated.
+
+So I followed VGG guidelines and I converted my convolutions to 3x3 with a padding that ensures the dimensions along the first 2 axes remain unchanged (i.e. if the input is 32x32xA, the output will be 32x32xB). Then, I converted my max pooling layers to divide the first 2 dimensions by 2 (e.g. input: 32x32xA, output 16x16xA).
+I also added dropout on the fully-connected layers.
+
+I finally added a third convolution layer as well as deepened the progressively each of the convolution layers in order to get a good balance between training set accuracy and validation set accuracy.
+
+
+### Test a Model on New Images
+
+Here are 6 German traffic signs that I found on the web with their respective probabilities:
+![alt text][internet_images]
+
+Here are the results of the prediction:
+
+| Number			        | Image			        |     Prediction	        					|
+|:---------------------:|:---------------------:|:------------------------------:|
+|1| General caution      		| General caution    									|
+|2| Turn right ahead    			| Turn right ahead 										|
+|3| Speed limit (60 km/h)					| Speed limit (60 km/h)										|
+|4| Stop	      		| No passing for vehicles over 3.5 metric tons					 				|
+|5| Roundabout mandatory			| End of no passing by vehicles over 3.5 metric tons|
+|6| Pedestrians			| Pedestrians	     							|
+
+The model was able to correctly guess 4 of the 6 traffic signs, which gives an accuracy of 66%.
+I was eventually very surprised to see that a model trained in 8 minutes (with a GPU) would be able to classify random images from the Internet just roughly padded with white bands.
+The classification of images 1,2,3 and 6 is a clear good choice (>60% probabiliy), while the other 2 are more uncertain (20-30% for the max probability).
+
+
+
+
+
+
+
+_(Optional) Visualizing the Neural Network (See Step 4 of the Ipython notebook for more details)
+Discuss the visual output of your trained network's feature maps. What characteristics did the neural network use to make classifications?_
+
+I was not totally sure how to get the `tf_activation` variable here.
